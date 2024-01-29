@@ -1,12 +1,14 @@
 {
-  "Plugin-Class": "org.example.ExamplePlugin",
-  "Name": "Example Plugin",
+  "Plugin-Class": "dev.czho.UnifiedModuleListPlugin",
+  "Name": "UnifiedModuleList",
   "Version": "${plugin_version}",
-  "Description": "Example rusherhack plugin",
+  "Description": "Plugin to module list with plugins from multiple utility mods",
   "Authors": [
-    "John200410"
+    "cz"
   ],
   "Minecraft-Versions": [
-    "1.20.1"
+    "1.20.2",
+    "1.20.3",
+    "1.20.4"
   ]
 }
