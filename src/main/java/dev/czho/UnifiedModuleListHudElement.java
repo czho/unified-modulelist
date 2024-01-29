@@ -37,6 +37,12 @@ public class UnifiedModuleListHudElement extends ListHudElement {
         }
     }
 
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        loadModules();
+    }
+
     @Subscribe
     public void onLoadWorld(EventLoadWorld event) {
         loadModules();
@@ -46,7 +52,7 @@ public class UnifiedModuleListHudElement extends ListHudElement {
     public void onTick(EventUpdate event) {
         //search thru modules list to see if any modules that are enabled, are not in the list, and then add them to the list
         for (ModuleHolder module : modules) {
-            if (module.isEnabled()) {
+            if (module.isEnabled() && module.isVisible()) {
                 boolean foundModule = false;
                 for (ListItem member : getMembers()) {
                     if (member instanceof ModuleListItem moduleListItem) {
@@ -57,38 +63,6 @@ public class UnifiedModuleListHudElement extends ListHudElement {
                 }
                 if (!foundModule) add(new ModuleListItem(module, this));
             }
-        }
-    }
-
-    class ModuleListItem extends ListHudElement.ListItem {
-        public ModuleHolder module;
-
-        public ModuleListItem(ModuleHolder module, ListHudElement parent) {
-            super(parent);
-
-            this.module = module;
-        }
-
-        @Override
-        public Component getText() {
-            if (module.getMetadata() != null) {
-                if (lowercase.getValue()) {
-                    return Component.literal((module.getName() + " [" + module.getMetadata() + "]").toLowerCase());
-                } else {
-                    return Component.literal(module.getName() + " [" + module.getMetadata() + "]");
-                }
-            } else {
-                if (lowercase.getValue()) {
-                    return Component.literal((module.getName()).toLowerCase());
-                } else {
-                    return Component.literal(module.getName());
-                }
-            }
-        }
-
-        @Override
-        public boolean shouldRemove() {
-            return !module.isEnabled();
         }
     }
 
@@ -138,6 +112,18 @@ public class UnifiedModuleListHudElement extends ListHudElement {
             throw new RuntimeException("Type not supported");
         }
 
+        public boolean isVisible() {
+            if (moduleType == ModuleType.METEOR) {
+                //todo: make this return actual value and not just true every time
+                //meteor client doesn't let me access this without mixins or anything like that because hidden modules are stored in a setting in ActiveModulesHud, there is no way accessing this object easily from what i can see
+                return true;
+            } else if (moduleType == ModuleType.RUSHER) {
+                return !rusherModule.isHidden();
+            }
+            //unreachable
+            throw new RuntimeException("Type not supported");
+        }
+
         public boolean equals(ModuleHolder moduleHolder) {
             if (moduleType == ModuleType.METEOR) {
                 return meteorModule == moduleHolder.meteorModule;
@@ -151,6 +137,37 @@ public class UnifiedModuleListHudElement extends ListHudElement {
         public enum ModuleType {
             RUSHER,
             METEOR
+        }
+    }
+
+    class ModuleListItem extends ListHudElement.ListItem {
+        public ModuleHolder module;
+
+        public ModuleListItem(ModuleHolder module, ListHudElement parent) {
+            super(parent);
+
+            this.module = module;
+        }
+        @Override
+        public Component getText() {
+            if (module.getMetadata() != null) {
+                if (lowercase.getValue()) {
+                    return Component.literal((module.getName() + " [" + module.getMetadata() + "]").toLowerCase());
+                } else {
+                    return Component.literal(module.getName() + " [" + module.getMetadata() + "]");
+                }
+            } else {
+                if (lowercase.getValue()) {
+                    return Component.literal((module.getName()).toLowerCase());
+                } else {
+                    return Component.literal(module.getName());
+                }
+            }
+        }
+
+        @Override
+        public boolean shouldRemove() {
+            return !module.isEnabled() || !module.isVisible();
         }
     }
 }
