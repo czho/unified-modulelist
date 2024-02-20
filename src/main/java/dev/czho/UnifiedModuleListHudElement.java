@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UnifiedModuleListHudElement extends ListHudElement {
-    final BooleanSetting lowercase = new BooleanSetting("Lowercase", false);
+    static List<String> hiddenModules = new ArrayList<>();
+    private final BooleanSetting lowercase = new BooleanSetting("Lowercase", false);
     List<ModuleHolder> modules = new ArrayList<>();
 
     public UnifiedModuleListHudElement() {
@@ -24,28 +25,50 @@ public class UnifiedModuleListHudElement extends ListHudElement {
         registerSettings(lowercase);
     }
 
-    public void loadModules() {
+    public void load() {
         modules.clear();
-        for (IModule feature : RusherHackAPI.getModuleManager().getFeatures()) {
-            if (feature instanceof ToggleableModule module) {
-                modules.add(new ModuleHolder(module));
-            }
-        }
 
-        for (Module module : Modules.get().getList()) {
-            modules.add(new ModuleHolder(module));
-        }
+        try {
+            if (RusherHackAPI.getModuleManager().getFeatures() != null)
+                for (IModule feature : RusherHackAPI.getModuleManager().getFeatures()) {
+                    if (feature instanceof ToggleableModule module) {
+                        modules.add(new ModuleHolder(module));
+                    }
+                }
+
+            if (Modules.get() != null)
+                for (Module module : Modules.get().getList()) {
+                    modules.add(new ModuleHolder(module));
+                }
+
+            hiddenModules.clear();
+            hiddenModules.addAll(UnifiedModuleListPlugin.loadConfig());
+        } catch (Exception e) {}
+    }
+
+    public void save() {
+        UnifiedModuleListPlugin.saveConfig(hiddenModules);
+    }
+
+    public Boolean isModuleLoaded(String moduleId) {
+        return modules.stream().map(ModuleHolder::getId).toList().contains(moduleId.toLowerCase());
     }
 
     @Override
     public void onEnable() {
         super.onEnable();
-        loadModules();
+        load();
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        save();
     }
 
     @Subscribe
     public void onLoadWorld(EventLoadWorld event) {
-        loadModules();
+        load();
     }
 
     @Subscribe
@@ -116,9 +139,19 @@ public class UnifiedModuleListHudElement extends ListHudElement {
             if (moduleType == ModuleType.METEOR) {
                 //todo: make this return actual value and not just true every time
                 //meteor client doesn't let me access this without mixins or anything like that because hidden modules are stored in a setting in ActiveModulesHud, there is no way accessing this object easily from what i can see
-                return true;
+                return !hiddenModules.contains(this.getId());
             } else if (moduleType == ModuleType.RUSHER) {
-                return !rusherModule.isHidden();
+                return !(hiddenModules.contains(this.getId()) || rusherModule.isHidden());
+            }
+            //unreachable
+            throw new RuntimeException("Type not supported");
+        }
+
+        public String getId() {
+            if (moduleType == ModuleType.METEOR) {
+                return meteorModule.name.toLowerCase().replaceAll("-", "");
+            } else if (moduleType == ModuleType.RUSHER) {
+                return rusherModule.getName().toLowerCase();
             }
             //unreachable
             throw new RuntimeException("Type not supported");
@@ -140,7 +173,7 @@ public class UnifiedModuleListHudElement extends ListHudElement {
         }
     }
 
-    class ModuleListItem extends ListHudElement.ListItem {
+    class ModuleListItem extends ListItem {
         public ModuleHolder module;
 
         public ModuleListItem(ModuleHolder module, ListHudElement parent) {
