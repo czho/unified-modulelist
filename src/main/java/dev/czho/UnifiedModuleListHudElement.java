@@ -137,8 +137,6 @@ public class UnifiedModuleListHudElement extends ListHudElement {
 
         public boolean isVisible() {
             if (moduleType == ModuleType.METEOR) {
-                //todo: make this return actual value and not just true every time
-                //meteor client doesn't let me access this without mixins or anything like that because hidden modules are stored in a setting in ActiveModulesHud, there is no way accessing this object easily from what i can see
                 return !hiddenModules.contains(this.getId());
             } else if (moduleType == ModuleType.RUSHER) {
                 return !(hiddenModules.contains(this.getId()) || rusherModule.isHidden());

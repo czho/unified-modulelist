@@ -42,8 +42,17 @@ public class HideModuleCommand extends Command {
     @CommandExecutor.Argument("string")
     private String removeModule(String string) {
         if (RusherHackAPI.getHudManager().getFeature("UnifiedModuleList").isPresent()) {
-            if (UnifiedModuleListHudElement.hiddenModules.remove(string.toLowerCase())) {return "Removed " + string + " from hidden modules";
+            if (UnifiedModuleListHudElement.hiddenModules.remove(string.toLowerCase())) {
+                return "Removed " + string + " from hidden modules";
             } else return string + " is not a loaded module";
+        } else return "Hud element is not present";
+    }
+    @CommandExecutor(subCommand = "clear")
+    @CommandExecutor.Argument("string")
+    private String clear(String string) {
+        if (RusherHackAPI.getHudManager().getFeature("UnifiedModuleList").isPresent()) {
+            UnifiedModuleListHudElement.hiddenModules.clear();
+            return "Cleared hidden modules";
         } else return "Hud element is not present";
     }
 }

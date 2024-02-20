@@ -8,7 +8,7 @@ import org.rusherhack.core.command.annotations.CommandExecutor;
 public class ListModulesCommand extends Command {
 
     public ListModulesCommand() {
-        super("HideModuleCommand", "description");
+        super("listmodules", "description");
     }
 
 
